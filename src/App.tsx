@@ -110,6 +110,7 @@ function birthdayDateLabels() {
 function publicAssetPath(src: string): string {
   if (/^(?:[a-z]+:|\/\/|data:|blob:)/i.test(src)) return src;
   const base = import.meta.env.BASE_URL.endsWith("/") ? import.meta.env.BASE_URL : import.meta.env.BASE_URL + "/";
+  if (src.startsWith(base)) return src;
   return base + src.replace(/^\/+/, "");
 }
 
@@ -1047,7 +1048,7 @@ function AudioDock({ visible }: { visible: boolean }) {
       <audio
         ref={audioRef}
         className="audio-dock__source"
-        src={birthdayConfig.audio.src}
+        src={publicAssetPath(birthdayConfig.audio.src)}
         preload="metadata"
         loop
         onLoadedMetadata={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)}
@@ -1061,7 +1062,7 @@ function AudioDock({ visible }: { visible: boolean }) {
           if (import.meta.env.DEV) console.warn("Birthday music could not load from " + birthdayConfig.audio.src + ". Check the file path in src/config/birthdayConfig.ts.");
         }}
       />
-      <img className="audio-dock__artwork" src={birthdayConfig.audio.artwork} alt="" onError={() => setArtworkFailed(true)} hidden={artworkFailed} />
+      <img className="audio-dock__artwork" src={publicAssetPath(birthdayConfig.audio.artwork)} alt="" onError={() => setArtworkFailed(true)} hidden={artworkFailed} />
       {artworkFailed && <div className="audio-dock__artwork-fallback" aria-hidden="true">✦</div>}
       <div className="audio-dock__track">
         <strong className="audio-dock__title">{birthdayConfig.audio.title}</strong>
