@@ -1,19 +1,27 @@
+import clientData from "./client.json";
+import type { ClientConfig, ClientPhoto } from "./clientTypes";
+import { allocatePhotoSections } from "../lib/distributePhotos";
+
+// The prebuild validator checks this JSON before production compilation.
+const client = clientData as ClientConfig;
+export const CLIENT_ARTWORK_MODE = "configured" as const;
+
 // ============================================================================
-// PERSONALIZE THIS FILE. Names, dates, copy, image paths, and scene content
-// live here so the layout and interaction code can stay untouched.
+// CLIENT INTAKE: edit src/config/client.json for names, dates, messages and photos.
+// This file retains scene defaults and frame metadata; layout code stays untouched.
 // ============================================================================
 
-// QUICK PERSONALIZATION: change these values for each new birthday page.
-export const BIRTHDAY_NAME = "Sweety";
-export const BIRTHDAY_NICKNAME = "Pipi";
-export const BIRTHDAY_AGE = 23;
-export const BIRTHDAY_DATE = "2026-11-11"; // YYYY-MM-DD
-export const BIRTHDAY_TIME = "00:00:00"; // 24-hour HH:MM:SS
-export const BIRTHDAY_TIMEZONE = "Asia/Dhaka"; // IANA timezone, e.g. Asia/Dhaka
+// Recipient aliases come from the centralized client intake.
+export const BIRTHDAY_NAME = client.recipient.name;
+export const BIRTHDAY_NICKNAME = client.recipient.nickname;
+export const BIRTHDAY_AGE = client.recipient.age;
+export const BIRTHDAY_DATE = client.recipient.birthdayDate; // YYYY-MM-DD
+export const BIRTHDAY_TIME = client.recipient.birthdayTime; // 24-hour HH:MM:SS
+export const BIRTHDAY_TIMEZONE = client.recipient.timezone; // IANA timezone, e.g. Asia/Dhaka
 
 // The reveal counts to BIRTHDAY_AGE - 1, burns that number, then reveals the age.
 
-export const birthdayConfig = {
+const defaults = {
   // 1. RECIPIENT AND BIRTHDAY
   recipient: {
     name: BIRTHDAY_NAME,
@@ -178,3 +186,35 @@ export const birthdayConfig = {
   },
 } as const;
 
+
+// Preserve section layouts; assign client content without changing frame geometry.
+export function buildBirthdayConfig(input: ClientConfig) {
+  const assigned = allocatePhotoSections(input.photos);
+  function fill<T extends { src: string; alt: string; caption?: string }>(slot: T, photo: ClientPhoto): T {
+    return { ...slot, src: photo.src, alt: photo.alt ?? slot.alt,
+      ...("caption" in slot ? { caption: photo.caption ?? slot.caption } : {}) };
+  }
+  return {
+    ...defaults, siteId: input.siteId, recipient: input.recipient, sender: input.sender,
+    reveal: { ...defaults.reveal, message: input.messages.reveal ?? defaults.reveal.message },
+    introduction: { ...defaults.introduction, message: input.messages.introduction ?? defaults.introduction.message },
+    photoCarousel: { ...defaults.photoCarousel, photos: defaults.photoCarousel.photos.map((slot, i) => fill(slot, assigned.carousel[i])) },
+    gallery: { ...defaults.gallery, photos: defaults.gallery.photos.map((slot, i) => fill(slot, assigned.memories[i])) },
+    scrapbook: { ...defaults.scrapbook, pages: defaults.scrapbook.pages.map((page, i) => ({
+      ...page, notes: input.scrapbookNotes[i] ?? page.notes,
+      photos: page.photos.map((slot, j) => fill(slot, assigned.scrapbook[i * 2 + j])),
+    })) },
+    photoUniverse: { ...defaults.photoUniverse, layoutPhotoCount: defaults.photoUniverse.photos.length,
+      photos: assigned.universe.map((photo, i) => ({
+        ...fill(defaults.photoUniverse.photos[i % defaults.photoUniverse.photos.length], photo),
+        id: "universe-slot-" + (i + 1),
+      })),
+    },
+    audio: { ...defaults.audio, src: input.music.src ?? defaults.audio.src, title: input.music.title ?? defaults.audio.title,
+      artwork: input.music.artwork ?? defaults.audio.artwork,
+    },
+    closing: { ...defaults.closing, message: input.messages.closing ?? defaults.closing.message,
+      signature: input.messages.signature ?? defaults.closing.signature },
+  };
+}
+export const birthdayConfig = buildBirthdayConfig(client);

@@ -1,0 +1,31 @@
+node_modules/
+dist/
+.build-check/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+*.local
+*.log
+.tmp/
+tmp/
+*.pem
+*.key
+.secrets/
+private-intake/
+.DS_Store
+Thumbs.db
+
+# Disposable synthetic media created by personalization tests
+public/.photo-system-test-*/
+
+# Credentials and private intake are never website source
+credentials*.json
+service-account*.json
+*.p12
+*.pfx
+.aws/
+.ssh/
+Clients/
+intake/
+test-evidence/

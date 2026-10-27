@@ -39,7 +39,7 @@ const CINEMA_PREVIEW_MESSAGE_HOLD_MS = 1000;
 const CINEMA_DAY_MESSAGE_HOLD_MS = 2000;
 
 function cinemaCurtainStorageKey(birthdayDate: string): string {
-  return "birthday-curtain-opened:" + birthdayDate;
+  return "birthday-curtain-opened:" + birthdayConfig.siteId + ":" + birthdayDate;
 }
 
 function hasCinemaCurtainOpened(birthdayDate: string): boolean {
@@ -782,7 +782,7 @@ function UniverseScene({ onPhotoOpen, onBack, onReplay }: {
     const photo = sourcePhotos[index % sourcePhotos.length];
     const column = index % columnPositions.length;
     const row = Math.floor(index / columnPositions.length);
-    const generation = Math.floor(index / sourcePhotos.length);
+    const generation = Math.floor(index / birthdayConfig.photoUniverse.layoutPhotoCount);
     const jitterX = ((index * 7) % 5 - 2) * 1.4;
     const jitterY = ((index * 11) % 5 - 2) * 1.1;
     return {
@@ -956,7 +956,7 @@ function UniverseScene({ onPhotoOpen, onBack, onReplay }: {
           </div>
           <h2>{birthdayConfig.closing.heading}</h2>
           <p>{birthdayConfig.closing.message}</p>
-          <em>{birthdayConfig.closing.signature}, {birthdayConfig.recipient.nickname}</em>
+          <em>{birthdayConfig.closing.signature}, {birthdayConfig.sender.name}</em>
         </aside>,
         document.body,
       )}
